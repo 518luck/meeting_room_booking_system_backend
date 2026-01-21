@@ -249,7 +249,7 @@ export class UserService {
   }
 
   // 修改密码
-  async updatePassword(userId: number, passwordDto: UpdateUserPasswordDto) {
+  async updatePassword(passwordDto: UpdateUserPasswordDto) {
     const captcha = await this.redisService.get(
       `update_password_captcha_${passwordDto.email}`,
     );
@@ -263,8 +263,12 @@ export class UserService {
     }
 
     const foundUser = await this.userRepository.findOneBy({
-      id: userId,
+      username: passwordDto.username,
     });
+
+    if (foundUser?.email !== passwordDto.email) {
+      throw new HttpException('邮箱地址与用户名不匹配', HttpStatus.BAD_REQUEST);
+    }
 
     if (!foundUser) {
       throw new HttpException('用户不存在', HttpStatus.BAD_REQUEST);
