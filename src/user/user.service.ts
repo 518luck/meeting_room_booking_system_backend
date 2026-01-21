@@ -189,6 +189,8 @@ export class UserService {
       id: user.id,
       username: user.username,
       isAdmin: user.isAdmin,
+      email: user.email,
+
       roles: user.roles.map((item) => item.name),
       permissions: user.roles.reduce<Permission[]>((arr, item) => {
         item.permissions.forEach((permission) => {
@@ -205,6 +207,7 @@ export class UserService {
   generateTokens(user: {
     id: number;
     username: string;
+    email: string;
     roles: string[];
     permissions: any[];
   }): GeneratedTokens {
@@ -212,6 +215,7 @@ export class UserService {
       {
         userId: user.id,
         username: user.username,
+        email: user.email,
         roles: user.roles,
         permissions: user.permissions,
       },
