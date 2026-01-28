@@ -1,0 +1,4 @@
+get(MeetingRoomService).initData()
+methods(MeetingRoomService)
+methods(meetingRoom.Service)
+methods(meetingRoomService)
