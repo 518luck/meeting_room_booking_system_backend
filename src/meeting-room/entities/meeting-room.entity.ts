@@ -2,9 +2,11 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Booking } from '@/meeting-room/entities/booking.entity';
 
 @Entity()
 export class MeetingRoom {
@@ -59,4 +61,8 @@ export class MeetingRoom {
     comment: '更新时间',
   })
   updateTime: Date;
+
+  // 在 MeetingRoom 实体内添加
+  @OneToMany(() => Booking, (booking) => booking.room)
+  bookings: Booking[];
 }

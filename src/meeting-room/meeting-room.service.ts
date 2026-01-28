@@ -1,14 +1,17 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateMeetingRoomDto } from './dto/create-meeting-room.dto';
 import { UpdateMeetingRoomDto } from './dto/update-meeting-room.dto';
-import { InjectRepository } from '@nestjs/typeorm';
+import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
 import { MeetingRoom } from '@/meeting-room/entities/meeting-room.entity';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository, Like } from 'typeorm';
+import { Booking } from '@/meeting-room/entities/booking.entity';
 
 @Injectable()
 export class MeetingRoomService {
   @InjectRepository(MeetingRoom)
   private repository: Repository<MeetingRoom>;
+  @InjectEntityManager()
+  entityManager: EntityManager;
 
   //初始化数据
   async initData() {
@@ -34,12 +37,35 @@ export class MeetingRoomService {
   }
 
   //查询会议室列表
-  async find(pageNo: number, pageSize: number) {
+  async find({
+    pageNo,
+    pageSize,
+    name,
+    capacity,
+    equipment,
+  }: {
+    pageNo: number;
+    pageSize: number;
+    name?: string;
+    capacity?: number;
+    equipment?: string;
+  }) {
     if (pageNo < 1) {
       throw new BadRequestException('页码必须大一1');
     }
 
     const skipCount = (pageNo - 1) * pageSize;
+
+    const condition: Record<string, any> = {};
+    if (name) {
+      condition.name = Like(`%${name}%`);
+    }
+    if (capacity) {
+      condition.capacity = Like(`%${capacity}%`);
+    }
+    if (equipment) {
+      condition.equipment = Like(`%${equipment}%`);
+    }
 
     //findAndCount 返回两个参数，第一个参数是查询结果，第二个参数是总条数
     const [meetingRooms, totalCount] = await this.repository.findAndCount({
@@ -47,6 +73,7 @@ export class MeetingRoomService {
       skip: skipCount,
       //take 取多少条数据(每页显示多少条)
       take: pageSize,
+      where: condition,
     });
 
     return {
@@ -100,6 +127,32 @@ export class MeetingRoomService {
       meetingRoom,
     );
 
+    return 'success';
+  }
+
+  // 回显的接口
+  async findById(id: number) {
+    return await this.repository.findOneBy({
+      id,
+    });
+  }
+
+  // 会议室删除
+  async delete(id: number) {
+    // 优先找出预约的会议室
+    const bookings = await this.entityManager.findBy(Booking, {
+      room: {
+        id: id,
+      },
+    });
+
+    // 先删除预约
+    for (let i = 0; i < bookings.length; i++) {
+      await this.entityManager.delete(Booking, bookings[i].id);
+    }
+
+    // 然后再删除会议室
+    await this.repository.delete(id);
     return 'success';
   }
 
