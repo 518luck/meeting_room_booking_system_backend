@@ -74,6 +74,9 @@ export class MeetingRoomService {
       //take 取多少条数据(每页显示多少条)
       take: pageSize,
       where: condition,
+      order: {
+        id: 'DESC',
+      },
     });
 
     return {
