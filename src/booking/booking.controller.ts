@@ -32,11 +32,11 @@ export class BookingController {
       generateParseIntPipe('pageSize'),
     )
     pageSize: number,
-    @Query('username') username: string,
-    @Query('meetingRoomName') meetingRoomName: string,
-    @Query('meetingRoomPosition') meetingRoomPosition: string,
-    @Query('bookingTimeRangeStart') bookingTimeRangeStart: number,
-    @Query('bookingTimeRangeEnd') bookingTimeRangeEnd: number,
+    @Query('username') username: string, //用户名
+    @Query('meetingRoomName') meetingRoomName: string, //会议室名称
+    @Query('meetingRoomPosition') meetingRoomPosition: string, //会议室位置
+    @Query('bookingTimeRangeStart') bookingTimeRangeStart: number, //预约时间范围开始
+    @Query('bookingTimeRangeEnd') bookingTimeRangeEnd: number, //预约时间范围结束
   ) {
     return this.bookingService.find(
       pageNo,
