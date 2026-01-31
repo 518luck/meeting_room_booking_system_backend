@@ -15,7 +15,8 @@ import { LoginGuard } from '@/login.guard';
 import { PermissionGuard } from '@/permission.guard';
 import { MeetingRoomModule } from '@/meeting-room/meeting-room.module';
 import { MeetingRoom } from '@/meeting-room/entities/meeting-room.entity';
-import { Booking } from './meeting-room/entities/booking.entity';
+import { BookingModule } from '@/booking/booking.module';
+import { Booking } from '@/booking/entities/booking.entity';
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { Booking } from './meeting-room/entities/booking.entity';
     RedisModule,
     EmailModule,
     MeetingRoomModule,
+    BookingModule,
   ],
   controllers: [AppController],
   providers: [

@@ -6,7 +6,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Booking } from '@/meeting-room/entities/booking.entity';
+import { Booking } from '@/booking/entities/booking.entity';
 
 @Entity()
 export class MeetingRoom {

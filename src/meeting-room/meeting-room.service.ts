@@ -4,7 +4,7 @@ import { UpdateMeetingRoomDto } from './dto/update-meeting-room.dto';
 import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
 import { MeetingRoom } from '@/meeting-room/entities/meeting-room.entity';
 import { EntityManager, Repository, Like } from 'typeorm';
-import { Booking } from '@/meeting-room/entities/booking.entity';
+import { Booking } from '@/booking/entities/booking.entity';
 
 @Injectable()
 export class MeetingRoomService {
