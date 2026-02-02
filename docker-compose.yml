@@ -5,6 +5,8 @@ services: # 所有的容器服务都定义在这里
     build: # 定义如何构建这个镜像
       context: ./ # 构建上下文：告诉 Docker 去当前目录下找文件
       dockerfile: ./Dockerfile # 指定具体的 Dockerfile 文件名
+    env_file:
+      - .env # 自动把本地 .env 注入到容器的环境变量中
     depends_on: # condition 的版本是“确定人坐稳了再开车”。
       mysql-container:
         condition: service_healthy
