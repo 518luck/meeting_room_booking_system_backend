@@ -1,11 +1,8 @@
 # Build stage
 FROM node:20-alpine AS builder
-
 # 安装 pnpm
 RUN npm install -g pnpm
-
 WORKDIR /app
-
 # 1. 拷贝 package.json 和 pnpm-lock.yaml
 # 注意：这里必须包含 pnpm-lock.yaml，否则 frozen-lockfile 会报错
 COPY package.json pnpm-lock.yaml ./
@@ -14,7 +11,7 @@ COPY package.json pnpm-lock.yaml ./
 # --frozen-lockfile 相当于 npm ci，确保锁定版本
 RUN pnpm install --frozen-lockfile
 
-# 拷贝源代码
+# 拷贝源代码(dockerfile只会创造一个node_modules文件,所以需要把执行文件放进来)
 COPY . .
 
 # 编译

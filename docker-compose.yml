@@ -1,40 +1,58 @@
-version: '3.8'
+version: '3.8' # 指定 Docker Compose 文件的版本协议（虽然现在新版可忽略，但写上不报错）
 
-services:
-  # MySQL 数据库服务
-  mysql:
-    image: mysql:8.0
-    container_name: meeting_room_mysql
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: 123456
-      MYSQL_DATABASE: meeting_room_booking_system
+services: # 所有的容器服务都定义在这里
+  nest-app: # 1. 后端应用服务名
+    build: # 定义如何构建这个镜像
+      context: ./ # 构建上下文：告诉 Docker 去当前目录下找文件
+      dockerfile: ./Dockerfile # 指定具体的 Dockerfile 文件名
+    depends_on: # condition 的版本是“确定人坐稳了再开车”。
+      mysql-container:
+        condition: service_healthy
+      redis-container:
+        condition: service_healthy
+    ports: # 端口映射 [宿主机端口:容器内端口]
+      - 3000:3000 # 将电脑的 3000 端口映射到容器的 3000 端口
+    networks: # 将此容器加入指定的网络
+      - common-network
+
+  mysql-container: # 2. 数据库服务名
+    image: mysql:8.0 # 指定使用的镜像版本
+    container_name: meeting_room_mysql # 强制指定容器名称，方便在终端通过名字找它
+    restart: always # 策略：除非手动停止，否则容器崩溃或重启后自动拉起
+    volumes: # 数据卷挂载：防止数据库重启后数据丢失
+      - mysql_data:/var/lib/mysql # 将持久化卷 mysql_data 挂载到数据库默认存储目录
+    environment: # 设置容器内的环境变量（MySQL 初始化必须项）
+      MYSQL_DATABASE: 123456 # 创建初始数据库名（注意：纯数字建议加引号或改名）
+      MYSQL_ROOT_PASSWORD: meeting_room_booking_system # 设置 root 用户的密码
+    networks:
+      - common-network
     ports:
       - '3306:3306'
-    volumes:
-      - mysql_data:/var/lib/mysql
-    command: --default-authentication-plugin=sha256_password
-    healthcheck:
-      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost']
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    healthcheck: # 健康检查：让 Docker 知道数据库是否真的“准备好了”
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost'] # 执行管理员命令检查心跳
+      interval: 10s # 每 10 秒检查一次
+      timeout: 5s # 检查超过 5 秒未响应视为超时
+      retries: 5 # 连续失败 5 次则标记为“不健康”
 
-  # Redis 缓存服务
-  redis:
-    image: redis:7-alpine
-    container_name: meeting_room_redis
-    restart: always
+  redis-container: # 3. 缓存服务名
+    image: redis # 使用官方最新版 Redis 镜像
+    restart: always # 自动重启
     ports:
-      - '6379:6379'
+      - '6379:6379' # 将 Redis 的 6379 端口暴露给电脑
     volumes:
-      - redis_data:/data
+      - redis_data:/data # 持久化 Redis 的 AOF/RDB 数据文件
+    networks:
+      - common-network
     healthcheck:
-      test: ['CMD', 'redis-cli', 'ping']
+      test: ['CMD', 'redis-cli', 'ping'] # 使用 redis-cli 发送 ping 命令检查响应
       interval: 10s
       timeout: 5s
       retries: 5
 
-volumes:
-  mysql_data:
-  redis_data:
+networks: # 定义逻辑网络，实现容器间的内部通信
+  common-network: # 网络名称
+    driver: bridge # 驱动模式：桥接模式（最常用的模式，让容器有独立 IP 且能互通）
+
+volumes: # 声明所有需要用到的持久化卷名（命名卷）
+  mysql_data: # 声明 mysql_data，由 Docker 在本地物理磁盘自动分配空间
+  redis_data: # 声明 redis_data
