@@ -1,6 +1,6 @@
 services: # 所有的容器服务都定义在这里
   fe-app:
-    image: fe-container:first
+    image: ccr.ccs.tencentyun.com/duoyun/fe-container:first
     ports:
       - 80:80
     depends_on:
