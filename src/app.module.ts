@@ -28,17 +28,17 @@ import * as path from 'path';
         return {
           type: 'mysql',
           host: configService.get<string>('mysql_server_host'),
-          port: configService.get<number>('mysql_server_port'),
-          username: configService.get<string>('mysql_server_username'),
-          password: configService.get<string>('mysql_server_password'),
-          database: configService.get<string>('mysql_server_database'),
-          synchronize: false,
-          logging: true,
+          port: configService.get<number>('mysql_server_port'), // 数据库服务器端口
+          username: configService.get<string>('mysql_server_username'), // 数据库用户名
+          password: configService.get<string>('mysql_server_password'), // 数据库密码
+          database: configService.get<string>('mysql_server_database'), // 数据库名称
+          synchronize: false, // 禁用自动同步数据库模式
+          logging: true, // 开启日志记录
           entities: [User, Role, Permission, MeetingRoom, Booking],
-          poolSize: 10,
-          connectorPackage: 'mysql2',
+          poolSize: 10, // 定义了数据库连接池
+          connectorPackage: 'mysql2', // 定义了使用的数据库驱动
           extra: {
-            authPlugin: 'sha256_password',
+            authPlugin: 'sha256_password', // 定义了使用的认证插件
           },
         };
       },

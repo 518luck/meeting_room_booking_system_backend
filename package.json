@@ -20,7 +20,7 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "//": "这一行定义了如何启动 TypeORM 的命令行界面（CLI）工具",
-    "typeorm": "ts-node ./node_modules/typeorm/cli",
+    "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli",
     "//_comment1-------------------------": "创建一个空的迁移文件模板（需手动编写 SQL）",
     "migration:create": "npm run typeorm -- migration:create",
     "//_comment2-------------------------": "【最常用】根据 Entity 与数据库的差异自动生成迁移文件",
