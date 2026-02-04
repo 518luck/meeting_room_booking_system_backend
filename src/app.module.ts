@@ -32,7 +32,7 @@ import * as path from 'path';
           username: configService.get<string>('mysql_server_username'),
           password: configService.get<string>('mysql_server_password'),
           database: configService.get<string>('mysql_server_database'),
-          synchronize: true,
+          synchronize: false,
           logging: true,
           entities: [User, Role, Permission, MeetingRoom, Booking],
           poolSize: 10,
