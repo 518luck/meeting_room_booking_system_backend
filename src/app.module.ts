@@ -25,6 +25,8 @@ import { MinioModule } from './minio/minio.module';
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory(configService: ConfigService) {
+        const syncConfig =
+          configService.get('mysql_server_synchronize') === 'true';
         return {
           type: 'mysql',
           host: configService.get<string>('mysql_server_host'),
@@ -32,7 +34,7 @@ import { MinioModule } from './minio/minio.module';
           username: configService.get<string>('mysql_server_username'), // 数据库用户名
           password: configService.get<string>('mysql_server_password'), // 数据库密码
           database: configService.get<string>('mysql_server_database'), // 数据库名称
-          synchronize: false, // 禁用自动同步数据库模式
+          synchronize: syncConfig, // 禁用自动同步数据库模式
           logging: true, // 开启日志记录
           entities: [User, Role, Permission, MeetingRoom, Booking],
           poolSize: 10, // 定义了数据库连接池
