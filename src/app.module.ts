@@ -18,7 +18,7 @@ import { MeetingRoom } from '@/meeting-room/entities/meeting-room.entity';
 import { BookingModule } from '@/booking/booking.module';
 import { Booking } from '@/booking/entities/booking.entity';
 import { StatisticModule } from './statistic/statistic.module';
-import * as path from 'path';
+import { MinioModule } from './minio/minio.module';
 
 @Module({
   imports: [
@@ -46,7 +46,10 @@ import * as path from 'path';
     ConfigModule.forRoot({
       isGlobal: true,
       // envFilePath: 'src/.env',
-      envFilePath: path.join(__dirname, '.env'),
+      envFilePath:
+        process.env.NODE_ENV === 'production'
+          ? '.env.production'
+          : '.env.development',
     }),
     JwtModule.registerAsync({
       global: true,
@@ -66,6 +69,7 @@ import * as path from 'path';
     MeetingRoomModule,
     BookingModule,
     StatisticModule,
+    MinioModule,
   ],
   controllers: [AppController],
   providers: [
