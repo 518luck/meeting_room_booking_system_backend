@@ -11,6 +11,7 @@ import {
   Req,
   UnauthorizedException,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { UserService } from '@/user/user.service';
@@ -38,6 +39,7 @@ import { UserListVo } from './vo/user-list.vo';
 import { FileInterceptor } from '@nestjs/platform-express';
 import path from 'path';
 import { storage } from '@/my-file-storage';
+import { AuthGuard } from '@nestjs/passport';
 
 @ApiTags('用户管理模块')
 @Controller('user')
@@ -120,12 +122,17 @@ export class UserController {
     description: '用户信息和 token',
     type: LoginUserVo,
   })
+  @UseGuards(AuthGuard('local'))
   //用户登录
   @Post(['login', 'admin/login'])
-  async userLogin(@Body() loginUser: LoginUserDto, @Req() req: Request) {
+  // async userLogin(@Body() loginUser: LoginUserDto, @Req() req: Request) {
+  userLogin(@UserInfo() vo: LoginUserVo) {
     // 根据路径判断是否是管理员登录
-    const isAdmin = req.url.includes('admin');
-    const vo = await this.userService.login(loginUser, isAdmin);
+    // const isAdmin = req.urlvo.userInfo.roles.includes('admin');
+    // let vo;
+    // if (isAdmin) {
+    //   vo = await this.userService.login(loginUser, isAdmin);
+    // }
 
     // 调用抽取的生成 Token 方法
     const tokens = this.userService.generateTokens({

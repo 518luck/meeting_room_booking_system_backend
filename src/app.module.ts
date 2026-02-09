@@ -19,6 +19,7 @@ import { BookingModule } from '@/booking/booking.module';
 import { Booking } from '@/booking/entities/booking.entity';
 import { StatisticModule } from './statistic/statistic.module';
 import { MinioModule } from './minio/minio.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -72,6 +73,7 @@ import { MinioModule } from './minio/minio.module';
     BookingModule,
     StatisticModule,
     MinioModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [
