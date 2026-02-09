@@ -1,6 +1,9 @@
 import { Permission } from '@/user/entities/permission.entity';
 
 export interface JwtUserData {
+  picture?: string;
+  lastName?: string;
+  firstName?: string;
   userId: number;
   username: string;
   email: string;

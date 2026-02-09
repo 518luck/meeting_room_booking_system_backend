@@ -6,7 +6,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { User } from '@/user/entities/user.entity';
+import { LoginType, User } from '@/user/entities/user.entity';
 import { FindOptionsWhere, Like, Repository } from 'typeorm';
 import { RegisterUserDto } from '@/user/dto/register-user.dto';
 import { RedisService } from '@/redis/redis.service';
@@ -89,6 +89,33 @@ export class UserService {
     }
   }
 
+  // 通过google登录注册用户
+  async registerByGoogleInfo(email: string, nickName: string, headPic: string) {
+    const newUser = new User();
+    newUser.email = email;
+    newUser.nickName = nickName;
+    newUser.headPic = headPic;
+    newUser.password = '';
+    newUser.username = email + Math.random().toString().slice(2, 10);
+    newUser.loginType = LoginType.GOOGLE;
+    newUser.isAdmin = false;
+
+    return this.userRepository.save(newUser);
+  }
+
+  // 通过email查找用户
+  async findUserByEmail(email: string) {
+    const user = await this.userRepository.findOne({
+      where: {
+        email: email,
+        isAdmin: false,
+      },
+      relations: ['roles', 'roles.permissions'],
+    });
+
+    return user;
+  }
+
   //初始数据
   // 张三是管理员，有 ccc 和 ddd 接口访问权限。
   // 李四是普通用户，只有 ccc 接口的访问权限。
@@ -137,6 +164,7 @@ export class UserService {
     const user = await this.userRepository.findOne({
       where: {
         username: loginUserDto.username,
+        loginType: LoginType.USERNAME_PASSWORD,
         isAdmin,
       },
       relations: ['roles', 'roles.permissions'],

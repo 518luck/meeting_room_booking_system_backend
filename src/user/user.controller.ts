@@ -9,6 +9,7 @@ import {
   Post,
   Query,
   Req,
+  Res,
   UnauthorizedException,
   UploadedFile,
   UseGuards,
@@ -40,6 +41,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import path from 'path';
 import { storage } from '@/my-file-storage';
 import { AuthGuard } from '@nestjs/passport';
+import type { Request, Response } from 'express';
 
 @ApiTags('用户管理模块')
 @Controller('user')
@@ -57,6 +59,7 @@ export class UserController {
   @Inject(RedisService)
   private redisService: RedisService;
 
+  // 发送注册验证码
   @ApiQuery({
     name: 'address',
     type: String,
@@ -100,7 +103,99 @@ export class UserController {
     return await this.userService.register(registerUser);
   }
 
-  //发送验证码
+  // 谷歌登录
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  async googleAuth() {}
+  //谷歌回调
+  @Get('callback/google')
+  @UseGuards(AuthGuard('google'))
+  async googleAuthRedirect(@Req() req: Request, @Res() res: Response) {
+    if (!req.user) {
+      throw new BadRequestException('google 登录失败');
+    }
+    const foundUser = await this.userService.findUserByEmail(req.user?.email);
+    if (foundUser) {
+      const vo = new LoginUserVo();
+      vo.userInfo = {
+        id: foundUser.id,
+        username: foundUser.username,
+        nickName: foundUser.nickName,
+        email: foundUser.email,
+        phoneNumber: foundUser.phoneNumber,
+        headPic: foundUser.headPic,
+        createTime: foundUser.createTime.getTime(),
+        isFrozen: foundUser.isFrozen,
+        isAdmin: foundUser.isAdmin,
+        roles: foundUser.roles.map((item) => item.name),
+        permissions: [],
+      };
+      // 1. flatMap 把嵌套数组拉平
+      // 2. map 只取出权限的名字
+      // 3. new Set() 自动完成去重
+      const allPermissions = foundUser.roles.flatMap(
+        (role) => role.permissions,
+      );
+      const uniquePermissionsMap = new Map(
+        allPermissions.map((p) => [p.id, p]),
+      );
+      vo.userInfo.permissions = [...uniquePermissionsMap.values()];
+
+      const tokens = this.userService.generateTokens({
+        id: vo.userInfo.id,
+        username: vo.userInfo.username,
+        email: vo.userInfo.email,
+        roles: vo.userInfo.roles,
+        permissions: vo.userInfo.permissions,
+      });
+
+      vo.accessToken = tokens.access_token;
+      vo.refreshToken = tokens.refresh_token;
+
+      res.cookie('userInfo', JSON.stringify(vo.userInfo));
+      res.cookie('accessToken', vo.accessToken);
+      res.cookie('refreshToken', vo.refreshToken);
+
+      // return vo;
+    } else {
+      const user = await this.userService.registerByGoogleInfo(
+        req.user.email,
+        req.user?.firstName + ' ' + req.user?.lastName,
+        req.user?.picture || '',
+      );
+
+      const vo = new LoginUserVo();
+      vo.userInfo = {
+        id: user.id,
+        username: user.username,
+        nickName: user.nickName,
+        email: user.email,
+        phoneNumber: user.phoneNumber,
+        headPic: user.headPic,
+        createTime: user.createTime.getTime(),
+        isFrozen: user.isFrozen,
+        isAdmin: user.isAdmin,
+        roles: [],
+        permissions: [],
+      };
+
+      const tokens = this.userService.generateTokens({
+        id: vo.userInfo.id,
+        username: vo.userInfo.username,
+        email: vo.userInfo.email,
+        roles: vo.userInfo.roles,
+        permissions: vo.userInfo.permissions,
+      });
+
+      vo.accessToken = tokens.access_token;
+      vo.refreshToken = tokens.refresh_token;
+
+      res.cookie('userInfo', JSON.stringify(vo.userInfo));
+      res.cookie('accessToken', vo.accessToken);
+      res.cookie('refreshToken', vo.refreshToken);
+    }
+    res.redirect('http://localhost:3005');
+  }
 
   // 初始化数据
   @Get('init-data')
@@ -109,6 +204,7 @@ export class UserController {
     return 'done';
   }
 
+  //用户登录
   @ApiBody({
     type: LoginUserDto,
   })
@@ -123,17 +219,8 @@ export class UserController {
     type: LoginUserVo,
   })
   @UseGuards(AuthGuard('local'))
-  //用户登录
   @Post(['login', 'admin/login'])
-  // async userLogin(@Body() loginUser: LoginUserDto, @Req() req: Request) {
   userLogin(@UserInfo() vo: LoginUserVo) {
-    // 根据路径判断是否是管理员登录
-    // const isAdmin = req.urlvo.userInfo.roles.includes('admin');
-    // let vo;
-    // if (isAdmin) {
-    //   vo = await this.userService.login(loginUser, isAdmin);
-    // }
-
     // 调用抽取的生成 Token 方法
     const tokens = this.userService.generateTokens({
       id: vo.userInfo.id,

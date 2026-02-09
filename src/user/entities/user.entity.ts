@@ -9,6 +9,12 @@ import {
 } from 'typeorm';
 import { Role } from '@/user/entities/role.entity';
 
+export enum LoginType {
+  USERNAME_PASSWORD = 0,
+  GOOGLE = 1,
+  GITHUB = 2,
+}
+
 @Entity({
   name: 'users',
 })
@@ -79,4 +85,11 @@ export class User {
     name: 'user_roles',
   })
   roles: Role[];
+
+  @Column({
+    type: 'int',
+    comment: '登录类型, 0 用户名密码登录, 1 Google 登录, 2 Github 登录',
+    default: 0,
+  })
+  loginType: LoginType;
 }
