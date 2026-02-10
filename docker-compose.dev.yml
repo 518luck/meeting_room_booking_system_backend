@@ -6,6 +6,7 @@ services:
     image: mysql:8.0
     container_name: dev_mysql
     restart: always
+    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci # 设置默认字符集
     environment:
       MYSQL_DATABASE: meeting_room_booking_system
       MYSQL_ROOT_PASSWORD: 123456
@@ -41,7 +42,8 @@ services:
       MINIO_ROOT_USER: admin
       MINIO_ROOT_PASSWORD: password123
     volumes:
-      - minio_data:/data
+      # 这里的 ./data 指的是你项目根目录下的 data 文件夹
+      - ./minio_data:/data
     command: server /data --console-address ":9001"
     networks:
       - infrastructure-network
