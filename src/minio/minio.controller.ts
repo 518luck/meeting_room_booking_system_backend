@@ -18,6 +18,6 @@ export class MinioController {
       name,
       3600,
     );
-    return url;
+    return url.replace('minio-container:9000', 'localhost:9000');
   }
 }

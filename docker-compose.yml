@@ -85,6 +85,6 @@ networks: # 定义逻辑网络，实现容器间的内部通信
     driver: bridge # 驱动模式：桥接模式（最常用的模式，让容器有独立 IP 且能互通）
 
 volumes: # 声明所有需要用到的持久化卷名（命名卷）
-  mysql_data: # 声明 mysql_data，由 Docker 在本地物理磁盘自动分配空间
+  mysql_data: # 声明 mysql_data
   redis_data: # 声明 redis_data
   minio_data: # 声明 minio_data
