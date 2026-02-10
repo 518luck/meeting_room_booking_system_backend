@@ -21,13 +21,20 @@ import { StatisticModule } from './statistic/statistic.module';
 import { MinioModule } from './minio/minio.module';
 import { AuthModule } from './auth/auth.module';
 import * as winston from 'winston';
-import { WinstonModule, utilities } from 'nest-winston';
+import {
+  WINSTON_MODULE_NEST_PROVIDER,
+  WinstonLogger,
+  WinstonModule,
+  utilities,
+} from 'nest-winston';
+import { CustomTypeOrmLogger } from '@/CustomTypeOrmLogger';
+import 'winston-daily-rotate-file';
 
 @Module({
   imports: [
     TypeOrmModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory(configService: ConfigService) {
+      inject: [ConfigService, WINSTON_MODULE_NEST_PROVIDER],
+      useFactory(configService: ConfigService, logger: WinstonLogger) {
         const syncConfig =
           configService.get('mysql_server_synchronize') === 'true';
         return {
@@ -40,6 +47,7 @@ import { WinstonModule, utilities } from 'nest-winston';
           synchronize: syncConfig, // 禁用自动同步数据库模式
           logging: true, // 开启日志记录
           entities: [User, Role, Permission, MeetingRoom, Booking],
+          logger: new CustomTypeOrmLogger(logger),
           poolSize: 10, // 定义了数据库连接池
           connectorPackage: 'mysql2', // 定义了使用的数据库驱动
           extra: {
@@ -70,12 +78,22 @@ import { WinstonModule, utilities } from 'nest-winston';
     }),
     // 配置 Winston 模块 用来记录日志
     WinstonModule.forRootAsync({
-      useFactory: () => ({
-        level: 'debug',
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        level: configService.get('winston_log_level') || 'debug',
         transports: [
           // 日志文件传输
-          new winston.transports.File({
-            filename: `${process.cwd()}/log`,
+          // new winston.transports.File({
+          //   filename: `${process.cwd()}/log`,
+          // }),
+          new winston.transports.DailyRotateFile({
+            level: configService.get('winston_log_level') || 'debug', // 记录 debug 及以上的所有日志（非常详细）
+            dirname: configService.get('winston_log_dirname') || 'daily-log', // 日志存放在项目根目录下的 daily-log 文件夹里
+            filename:
+              configService.get('winston_log_filename') || 'log-%DATE%.log', // %DATE% 会被替换为下方的日期格式
+            datePattern:
+              configService.get('winston_log_date_pattern') || 'YYYY-MM-DD', // 规定日期格式，决定了日志每天切分一次
+            maxSize: configService.get('winston_log_max_size') || '10k', // 💡 关键：单个文件满 10KB 就自动存入下一个新文件
           }),
           // 控制台传输
           new winston.transports.Console({
@@ -83,6 +101,12 @@ import { WinstonModule, utilities } from 'nest-winston';
               winston.format.timestamp(),
               utilities.format.nestLike(),
             ),
+          }),
+          // 日志服务
+          new winston.transports.Http({
+            host: configService.get('winston_log_http_host') || 'localhost',
+            port: configService.get('winston_log_http_port') || 3002,
+            path: configService.get('winston_log_http_path') || '/log',
           }),
         ],
       }),
