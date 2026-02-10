@@ -11,12 +11,13 @@ export class MinioController {
   private configService: ConfigService;
 
   @Get('presignedUrl')
-  presignedPutObject(@Query('name') name: string) {
-    return this.minioClient.presignedPutObject(
+  async presignedPutObject(@Query('name') name: string) {
+    const url = await this.minioClient.presignedPutObject(
       this.configService.get('minio_bucket_name') ||
         'meeting-room-booking-system',
       name,
       3600,
     );
+    return url;
   }
 }
