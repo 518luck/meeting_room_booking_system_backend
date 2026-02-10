@@ -20,6 +20,8 @@ import { Booking } from '@/booking/entities/booking.entity';
 import { StatisticModule } from './statistic/statistic.module';
 import { MinioModule } from './minio/minio.module';
 import { AuthModule } from './auth/auth.module';
+import * as winston from 'winston';
+import { WinstonModule, utilities } from 'nest-winston';
 
 @Module({
   imports: [
@@ -65,6 +67,25 @@ import { AuthModule } from './auth/auth.module';
           },
         };
       },
+    }),
+    // 配置 Winston 模块 用来记录日志
+    WinstonModule.forRootAsync({
+      useFactory: () => ({
+        level: 'debug',
+        transports: [
+          // 日志文件传输
+          new winston.transports.File({
+            filename: `${process.cwd()}/log`,
+          }),
+          // 控制台传输
+          new winston.transports.Console({
+            format: winston.format.combine(
+              winston.format.timestamp(),
+              utilities.format.nestLike(),
+            ),
+          }),
+        ],
+      }),
     }),
     UserModule,
     RedisModule,
